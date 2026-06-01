@@ -1,17 +1,31 @@
-import { supabase } from "@/lib/supabase";
+"use client";
 
-export default async function Page() {
-  const { data, error } = await supabase.from("tasks").select("*");
-  
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import type { Task } from "@/types/task";
+import TaskForm from "@/components/tasks/TaskForm";
+
+export default function Page() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  const fetchTasks = async () => {
+    const { data } = await supabase.from("tasks").select("*");
+    setTasks((data as Task[]) || []);
+  };
+
+  useEffect(() => {
+    void fetchTasks();
+  }, []);
 
   return (
     <div style={{ padding: 20 }}>
       <h1>Tasks</h1>
 
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <TaskForm onAdd={fetchTasks} />
+
+      {tasks.map((task) => (
+        <div key={task.id}>{task.title}</div>
+      ))}
     </div>
   );
 }
