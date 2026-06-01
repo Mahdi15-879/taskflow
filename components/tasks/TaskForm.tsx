@@ -13,10 +13,16 @@ export default function TaskForm({ onAdd }: Props) {
   const addTask = async () => {
     if (!title.trim()) return;
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     await supabase.from("tasks").insert({
       title,
       status: "todo",
+      user_id: user?.id, // ⭐ این خط حیاتیه
     });
+    await onAdd();
 
     setTitle("");
     onAdd();
