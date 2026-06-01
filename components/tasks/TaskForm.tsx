@@ -20,7 +20,7 @@ export default function TaskForm({ onAdd }: Props) {
     await supabase.from("tasks").insert({
       title,
       status: "todo",
-      user_id: user?.id, // ⭐ این خط حیاتیه
+      user_id: user?.id,
     });
     await onAdd();
 

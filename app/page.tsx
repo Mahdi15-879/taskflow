@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Task } from "@/types/task";
-
+import Navbar from "@/components/layout/Navbar";
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskItem from "@/components/tasks/TaskItem";
 
@@ -13,31 +13,15 @@ export default function Page() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 📌 fetch tasks فقط بر اساس user
-  const fetchTasks = async (currentUser: User) => {
+  const fetchTasks = async (userId: string) => {
     const { data } = await supabase
       .from("tasks")
       .select("*")
-      .eq("user_id", currentUser.id);
+      .eq("user_id", userId);
 
     setTasks(data || []);
   };
 
-  const reloadTasks = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    await fetchTasks(user);
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  // 🔥 AUTH LISTENER (core of app)
   useEffect(() => {
     const {
       data: { subscription },
@@ -47,20 +31,17 @@ export default function Page() {
       setUser(currentUser);
 
       if (currentUser) {
-        fetchTasks(currentUser);
+        fetchTasks(currentUser.id);
       } else {
         setTasks([]);
       }
 
-      setLoading(false); // ✅ فقط اینو اضافه کن
+      setLoading(false);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  // 🟡 loading state
   if (loading) {
     return (
       <div style={{ padding: 20 }}>
@@ -69,7 +50,6 @@ export default function Page() {
     );
   }
 
-  // 🔴 not logged in UI
   if (!user) {
     return (
       <div style={{ padding: 20 }}>
@@ -79,22 +59,32 @@ export default function Page() {
     );
   }
 
-  // 🟢 main app
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Tasks</h1>
+    <div>
+      <Navbar user={user} />
 
-      <p>Welcome {user.email}</p>
+      <div style={{ padding: 20 }}>
+        <h1>Tasks</h1>
 
-      <button onClick={handleLogout}>Logout</button>
+        <p>Welcome {user.email}</p>
 
-      <TaskForm onAdd={reloadTasks} />
+        <TaskForm onAdd={() => fetchTasks(user.id)} />
 
-      {tasks.length === 0 && <p>No tasks yet. Create your first task 🚀</p>}
+        {!tasks.length && (
+          <div style={{ marginTop: 20, opacity: 0.6 }}>
+            <p>📝 No tasks yet</p>
+            <p>Create your first task to get started</p>
+          </div>
+        )}
 
-      {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} onChange={reloadTasks} />
-      ))}
+        {tasks.map((task) => (
+          <TaskItem
+            key={task.id}
+            task={task}
+            onChange={() => fetchTasks(user.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
