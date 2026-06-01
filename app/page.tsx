@@ -33,6 +33,10 @@ export default function Page() {
     await fetchTasks(user);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   // 🔥 AUTH LISTENER (core of app)
   useEffect(() => {
     const {
@@ -81,6 +85,8 @@ export default function Page() {
       <h1>Tasks</h1>
 
       <p>Welcome {user.email}</p>
+
+      <button onClick={handleLogout}>Logout</button>
 
       <TaskForm onAdd={reloadTasks} />
 
