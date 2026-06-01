@@ -4,13 +4,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Task } from "@/types/task";
 import TaskForm from "@/components/tasks/TaskForm";
+import TaskItem from "@/components/tasks/TaskItem";
 
 export default function Page() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchTasks = async () => {
+    setLoading(true);
+
     const { data } = await supabase.from("tasks").select("*");
-    setTasks((data as Task[]) || []);
+
+    setTasks(data || []);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -23,9 +29,17 @@ export default function Page() {
 
       <TaskForm onAdd={fetchTasks} />
 
-      {tasks.map((task) => (
-        <div key={task.id}>{task.title}</div>
-      ))}
+      {!loading && tasks.length === 0 && (
+        <p>No tasks yet. Create your first task 🚀</p>
+      )}
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        tasks.map((task) => (
+          <TaskItem key={task.id} task={task} onChange={fetchTasks} />
+        ))
+      )}
     </div>
   );
 }
