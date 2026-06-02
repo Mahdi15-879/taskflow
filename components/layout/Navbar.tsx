@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { LogOut } from "lucide-react";
 
 type Props = {
   user: User | null;
@@ -25,8 +26,9 @@ export default function Navbar({ user }: Props) {
           {user && (
             <button
               onClick={() => supabase.auth.signOut()}
-              className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700 cursor-pointer"
+              className="flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700 cursor-pointer"
             >
+              <LogOut size={16} />
               Logout
             </button>
           )}

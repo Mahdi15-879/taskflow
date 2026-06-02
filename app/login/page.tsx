@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,14 @@ export default function LoginPage() {
             disabled={loading}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:bg-slate-200 disabled:opacity-50 cursor-pointer"
           >
-            {loading ? "Redirecting..." : "Continue with Google"}
+            {loading ? (
+              "Redirecting..."
+            ) : (
+              <>
+                <FcGoogle size={20} />
+                Continue with Google
+              </>
+            )}
           </button>
 
           <button
@@ -49,7 +58,14 @@ export default function LoginPage() {
             disabled={loading}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 cursor-pointer"
           >
-            {loading ? "Redirecting..." : "Continue with GitHub"}
+            {loading ? (
+              "Redirecting..."
+            ) : (
+              <>
+                <FaGithub size={18} />
+                Continue with GitHub
+              </>
+            )}
           </button>
         </div>
 

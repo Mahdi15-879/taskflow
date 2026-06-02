@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { PlusCircle, Plus } from "lucide-react";
 
 export default function TaskForm() {
   const [title, setTitle] = useState("");
@@ -52,9 +53,16 @@ export default function TaskForm() {
       <button
         onClick={addTask}
         disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
+        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
       >
-        {loading ? "Adding..." : "Add"}
+        {loading ? (
+          "Adding..."
+        ) : (
+          <>
+            <PlusCircle size={18} />
+            Add Task
+          </>
+        )}
       </button>
     </div>
   );

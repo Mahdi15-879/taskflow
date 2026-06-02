@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { LogIn } from "lucide-react";
+
 import type { User } from "@supabase/supabase-js";
 import type { Task } from "@/types/task";
 
@@ -20,6 +35,14 @@ export default function Page() {
 
   const filters: Filter[] = ["all", "todo", "done"];
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    }),
+  );
+
   const fetchTasks = async (userId: string) => {
     const { data, error } = await supabase
       .from("tasks")
@@ -34,6 +57,19 @@ export default function Page() {
     if (filter === "all") return true;
     return task.status === filter;
   });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    setTasks((items) => {
+      const oldIndex = items.findIndex((t) => t.id === active.id);
+      const newIndex = items.findIndex((t) => t.id === over.id);
+
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
 
   useEffect(() => {
     const {
@@ -115,12 +151,18 @@ export default function Page() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 text-center">
+        <LogIn size={40} className="text-slate-400" />
+
         <h2 className="text-2xl font-semibold">You are not logged in</h2>
+
+        <p className="text-sm text-slate-400">
+          Please sign in to access your tasks
+        </p>
 
         <a
           href="/login"
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium transition hover:bg-blue-500"
+          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium transition hover:bg-blue-500"
         >
           Go to Login
         </a>
@@ -171,11 +213,22 @@ export default function Page() {
             </p>
           </div>
         ) : (
-          <div className="mt-6 space-y-3">
-            {filteredTasks.map((task) => (
-              <TaskItem key={task.id} task={task} />
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={filteredTasks.map((t) => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="mt-6 space-y-3">
+                {filteredTasks.map((task) => (
+                  <TaskItem key={task.id} task={task} />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </main>
     </div>
