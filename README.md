@@ -169,7 +169,7 @@ http://localhost:3000
 **Mahdi Heidari**
 
 * GitHub: https://github.com/Mahdi15-879
-* LinkedIn: https://www.linkedin.com/in/mahdi-heydar/
+* LinkedIn: https://www.linkedin.com/in/mahdi-heidar/
 
 ---
 
