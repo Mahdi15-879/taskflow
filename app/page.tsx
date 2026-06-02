@@ -179,7 +179,8 @@ export default function Page() {
           <h1 className="text-4xl font-bold tracking-tight">My Tasks</h1>
 
           <p className="mt-2 text-slate-400">
-            Manage your tasks and stay productive.
+            Organize your tasks in real time with a smooth, modern drag & drop
+            experience.
           </p>
         </div>
 
