@@ -8,11 +8,17 @@ import type { Task } from "@/types/task";
 import Navbar from "@/components/layout/Navbar";
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskItem from "@/components/tasks/TaskItem";
+import TaskSkeleton from "@/components/tasks/TaskSkeleton";
+
+type Filter = "all" | "todo" | "done";
 
 export default function Page() {
   const [user, setUser] = useState<User | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const filters: Filter[] = ["all", "todo", "done"];
 
   const fetchTasks = async (userId: string) => {
     const { data, error } = await supabase
@@ -23,6 +29,11 @@ export default function Page() {
 
     if (!error) setTasks(data || []);
   };
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "all") return true;
+    return task.status === filter;
+  });
 
   useEffect(() => {
     const {
@@ -90,8 +101,14 @@ export default function Page() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen">
+        <Navbar user={null} />
+
+        <main className="mx-auto max-w-4xl px-6 py-10 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <TaskSkeleton key={i} />
+          ))}
+        </main>
       </div>
     );
   }
@@ -124,6 +141,23 @@ export default function Page() {
           </p>
         </div>
 
+        <div className="mb-6 flex gap-2">
+          {filters.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1 rounded-lg text-sm border transition cursor-pointer
+      ${
+        filter === f
+          ? "bg-blue-600 border-blue-500 text-white"
+          : "bg-slate-900 border-slate-700 text-slate-300"
+      }`}
+            >
+              {f.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
         <TaskForm />
 
         {tasks.length === 0 ? (
@@ -138,7 +172,7 @@ export default function Page() {
           </div>
         ) : (
           <div className="mt-6 space-y-3">
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <TaskItem key={task.id} task={task} />
             ))}
           </div>
