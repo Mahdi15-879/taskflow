@@ -79,6 +79,45 @@ export default function Page() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("tasks-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tasks",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newTask = payload.new as Task;
+          const oldTask = payload.old as Task;
+
+          if (payload.eventType === "INSERT") {
+            setTasks((prev) => [newTask, ...prev]);
+          }
+
+          if (payload.eventType === "UPDATE") {
+            setTasks((prev) =>
+              prev.map((t) => (t.id === newTask.id ? newTask : t)),
+            );
+          }
+
+          if (payload.eventType === "DELETE") {
+            setTasks((prev) => prev.filter((t) => t.id !== oldTask.id));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
