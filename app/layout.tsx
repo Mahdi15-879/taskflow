@@ -8,7 +8,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: "sans-serif" }}>
+      <body className="font-sans">
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
