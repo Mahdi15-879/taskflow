@@ -2,14 +2,6 @@
 
 A modern real-time task management application built with **Next.js**, **React**, and **Supabase**. TaskFlow enables users to create, organize, and manage tasks through a fast, responsive, and intuitive interface powered by real-time synchronization, drag-and-drop interactions, and secure authentication.
 
-<!-- ---
-
-## 🌐 Live Demo
-
-[View Live Demo](https://your-demo-url.com)
-
---- -->
-
 ## ✨ Features
 
 * 🔐 Authentication with Google & GitHub (Supabase Auth)
