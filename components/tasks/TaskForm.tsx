@@ -4,38 +4,63 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Props = {
-  onAdd: () => void;
+  onAdd: (title: string) => void;
 };
 
 export default function TaskForm({ onAdd }: Props) {
   const [title, setTitle] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const addTask = async () => {
-    if (!title.trim()) return;
+    if (!title.trim() || loading) return;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    setLoading(true);
 
-    await supabase.from("tasks").insert({
-      title,
-      status: "todo",
-      user_id: user?.id,
-    });
-    await onAdd();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    setTitle("");
-    onAdd();
+      if (!user) return;
+
+      const { error } = await supabase.from("tasks").insert({
+        title,
+        status: "todo",
+        user_id: user.id,
+      });
+
+      if (error) throw error;
+
+      setTitle("");
+      onAdd(title);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add task");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div className="mb-6 flex gap-2">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="New task"
+        placeholder="Write a new task..."
+        className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-white outline-none focus:border-blue-500"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") addTask();
+        }}
+        disabled={loading}
       />
-      <button onClick={addTask}>Add</button>
+
+      <button
+        onClick={addTask}
+        disabled={loading}
+        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-500 disabled:opacity-50"
+      >
+        {loading ? "Adding..." : "Add"}
+      </button>
     </div>
   );
 }

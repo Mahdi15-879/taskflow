@@ -1,33 +1,62 @@
 "use client";
 
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const loginGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${location.origin}/`,
-      },
-    });
-  };
+  const [loading, setLoading] = useState(false);
 
-  const loginGithub = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${location.origin}/`,
-      },
-    });
+  const login = async (provider: "google" | "github") => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${location.origin}/`,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Login</h1>
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center backdrop-blur">
+        <h1 className="text-3xl font-bold text-white">Welcome to TaskFlow</h1>
 
-      <button onClick={loginGoogle}>Login with Google</button>
-      <br />
-      <button onClick={loginGithub}>Login with GitHub</button>
+        <p className="mt-2 text-sm text-slate-400">
+          Sign in to manage your tasks
+        </p>
+
+        <div className="mt-8 space-y-3">
+          <button
+            onClick={() => login("google")}
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:bg-slate-200 disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? "Redirecting..." : "Continue with Google"}
+          </button>
+
+          <button
+            onClick={() => login("github")}
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? "Redirecting..." : "Continue with GitHub"}
+          </button>
+        </div>
+
+        <p className="mt-6 text-xs text-slate-500">
+          Secure OAuth authentication powered by Supabase
+        </p>
+      </div>
     </div>
   );
 }

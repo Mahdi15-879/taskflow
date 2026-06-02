@@ -9,32 +9,29 @@ type Props = {
 
 export default function Navbar({ user }: Props) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "12px 20px",
-        borderBottom: "1px solid #eee",
-      }}
-    >
-      <h2 style={{ margin: 0 }}>TaskFlow</h2>
+    <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/70 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <h1 className="text-lg font-bold tracking-tight text-white">
+          TaskFlow
+        </h1>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        {user && <span>{user.email}</span>}
+        <div className="flex items-center gap-4">
+          {user && (
+            <span className="hidden text-sm text-slate-400 sm:block">
+              {user.email}
+            </span>
+          )}
 
-        {user && (
-          <button
-            onClick={() => supabase.auth.signOut()}
-            style={{
-              padding: "6px 12px",
-              cursor: "pointer",
-            }}
-          >
-            Logout
-          </button>
-        )}
+          {user && (
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-white transition hover:bg-slate-700 cursor-pointer"
+            >
+              Logout
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

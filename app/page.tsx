@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Task } from "@/types/task";
+
 import Navbar from "@/components/layout/Navbar";
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskItem from "@/components/tasks/TaskItem";
@@ -14,12 +15,48 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
 
   const fetchTasks = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("tasks")
       .select("*")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-    setTasks(data || []);
+    if (!error) setTasks(data || []);
+  };
+
+  const updateTask = (updated: Task) => {
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  };
+
+  const removeTask = (id: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const addTaskOptimistic = async (title: string) => {
+    if (!user) return;
+
+    const tempTask = {
+      id: crypto.randomUUID(),
+      title,
+      status: "todo" as const,
+      user_id: user.id,
+    } satisfies Task;
+
+    setTasks((prev) => [tempTask, ...prev]);
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert({
+        title,
+        status: "todo",
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setTasks((prev) => prev.map((t) => (t.id === tempTask.id ? data : t)));
+    }
   };
 
   useEffect(() => {
@@ -31,7 +68,7 @@ export default function Page() {
       setUser(currentUser);
 
       if (currentUser) {
-        fetchTasks(currentUser.id);
+        void fetchTasks(currentUser.id);
       } else {
         setTasks([]);
       }
@@ -44,47 +81,65 @@ export default function Page() {
 
   if (loading) {
     return (
-      <div style={{ padding: 20 }}>
-        <p>Loading...</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-slate-400">Loading...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div style={{ padding: 20 }}>
-        <h2>You are not logged in</h2>
-        <a href="/login">Go to Login</a>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <h2 className="text-2xl font-semibold">You are not logged in</h2>
+
+        <a
+          href="/login"
+          className="rounded-lg bg-blue-600 px-4 py-2 font-medium transition hover:bg-blue-500"
+        >
+          Go to Login
+        </a>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-screen">
       <Navbar user={user} />
 
-      <div style={{ padding: 20 }}>
-        <h1>Tasks</h1>
+      <main className="mx-auto max-w-4xl px-6 py-10">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight">My Tasks</h1>
 
-        <p>Welcome {user.email}</p>
+          <p className="mt-2 text-slate-400">
+            Manage your tasks and stay productive.
+          </p>
+        </div>
 
-        <TaskForm onAdd={() => fetchTasks(user.id)} />
+        <TaskForm onAdd={(title) => addTaskOptimistic(title)} />
 
-        {!tasks.length && (
-          <div style={{ marginTop: 20, opacity: 0.6 }}>
-            <p>📝 No tasks yet</p>
-            <p>Create your first task to get started</p>
+        {tasks.length === 0 ? (
+          <div className="mt-10 rounded-xl border border-slate-700 bg-slate-800/50 p-8 text-center">
+            <div className="text-4xl">📝</div>
+
+            <h3 className="mt-4 text-lg font-semibold">No tasks yet</h3>
+
+            <p className="mt-2 text-slate-400">
+              Create your first task to get started.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {tasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onUpdate={updateTask}
+                onDelete={removeTask}
+              />
+            ))}
           </div>
         )}
-
-        {tasks.map((task) => (
-          <TaskItem
-            key={task.id}
-            task={task}
-            onChange={() => fetchTasks(user.id)}
-          />
-        ))}
-      </div>
+      </main>
     </div>
   );
 }
