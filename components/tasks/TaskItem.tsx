@@ -3,36 +3,39 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Task } from "@/types/task";
+import { useToast } from "@/components/ui/toast";
 
 type Props = {
   task: Task;
-  onUpdate: (task: Task) => void;
-  onDelete: (id: string) => void;
 };
 
-export default function TaskItem({ task, onUpdate, onDelete }: Props) {
+export default function TaskItem({ task }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [loading, setLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const { showToast } = useToast();
 
   const runAction = async (action: () => Promise<unknown>) => {
     try {
       setLoading(true);
       await action();
+    } catch (err) {
+      console.error("Task action error:", err);
+      showToast("Something went wrong", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const deleteTask = async () => {
-    if (!window.confirm("Delete this task?")) return;
-
     await runAction(async () => {
       const { error } = await supabase.from("tasks").delete().eq("id", task.id);
 
       if (error) throw error;
 
-      onDelete(task.id);
+      showToast("Task deleted", "success");
     });
   };
 
@@ -40,16 +43,14 @@ export default function TaskItem({ task, onUpdate, onDelete }: Props) {
     const newStatus = task.status === "done" ? "todo" : "done";
 
     await runAction(async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("tasks")
         .update({ status: newStatus })
-        .eq("id", task.id)
-        .select()
-        .single();
+        .eq("id", task.id);
 
       if (error) throw error;
 
-      if (data) onUpdate(data);
+      showToast("Task updated", "success");
     });
   };
 
@@ -57,16 +58,14 @@ export default function TaskItem({ task, onUpdate, onDelete }: Props) {
     if (!title.trim()) return;
 
     await runAction(async () => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("tasks")
         .update({ title })
-        .eq("id", task.id)
-        .select()
-        .single();
+        .eq("id", task.id);
 
       if (error) throw error;
 
-      if (data) onUpdate(data);
+      showToast("Task renamed", "success");
     });
 
     setIsEditing(false);
@@ -150,7 +149,7 @@ export default function TaskItem({ task, onUpdate, onDelete }: Props) {
             </button>
 
             <button
-              onClick={deleteTask}
+              onClick={() => setShowDeleteModal(true)}
               disabled={loading}
               className="rounded-lg bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-500 cursor-pointer"
             >
@@ -159,6 +158,37 @@ export default function TaskItem({ task, onUpdate, onDelete }: Props) {
           </>
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="w-[320px] rounded-xl bg-slate-900 p-5 border border-slate-700">
+            <h3 className="text-white text-lg font-semibold">Delete task?</h3>
+
+            <p className="mt-2 text-sm text-slate-400">
+              This action cannot be undone.
+            </p>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-3 py-1 rounded-lg bg-slate-700 text-white hover:bg-slate-600 cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  setShowDeleteModal(false);
+                  await deleteTask();
+                }}
+                className="px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-500 cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

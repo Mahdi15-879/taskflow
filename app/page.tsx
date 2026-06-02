@@ -24,41 +24,6 @@ export default function Page() {
     if (!error) setTasks(data || []);
   };
 
-  const updateTask = (updated: Task) => {
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-  };
-
-  const removeTask = (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const addTaskOptimistic = async (title: string) => {
-    if (!user) return;
-
-    const tempTask = {
-      id: crypto.randomUUID(),
-      title,
-      status: "todo" as const,
-      user_id: user.id,
-    } satisfies Task;
-
-    setTasks((prev) => [tempTask, ...prev]);
-
-    const { data, error } = await supabase
-      .from("tasks")
-      .insert({
-        title,
-        status: "todo",
-        user_id: user.id,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setTasks((prev) => prev.map((t) => (t.id === tempTask.id ? data : t)));
-    }
-  };
-
   useEffect(() => {
     const {
       data: { subscription },
@@ -81,7 +46,6 @@ export default function Page() {
 
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel("tasks-realtime")
       .on(
@@ -94,10 +58,13 @@ export default function Page() {
         },
         (payload) => {
           const newTask = payload.new as Task;
-          const oldTask = payload.old as Task;
 
           if (payload.eventType === "INSERT") {
-            setTasks((prev) => [newTask, ...prev]);
+            setTasks((prev) => {
+              const exists = prev.some((t) => t.id === newTask.id);
+              if (exists) return prev;
+              return [newTask, ...prev];
+            });
           }
 
           if (payload.eventType === "UPDATE") {
@@ -107,7 +74,10 @@ export default function Page() {
           }
 
           if (payload.eventType === "DELETE") {
-            setTasks((prev) => prev.filter((t) => t.id !== oldTask.id));
+            const deletedId = payload.old?.id;
+            if (!deletedId) return;
+
+            setTasks((prev) => prev.filter((t) => t.id !== deletedId));
           }
         },
       )
@@ -154,7 +124,7 @@ export default function Page() {
           </p>
         </div>
 
-        <TaskForm onAdd={(title) => addTaskOptimistic(title)} />
+        <TaskForm />
 
         {tasks.length === 0 ? (
           <div className="mt-10 rounded-xl border border-slate-700 bg-slate-800/50 p-8 text-center">
@@ -169,12 +139,7 @@ export default function Page() {
         ) : (
           <div className="mt-6 space-y-3">
             {tasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onUpdate={updateTask}
-                onDelete={removeTask}
-              />
+              <TaskItem key={task.id} task={task} />
             ))}
           </div>
         )}

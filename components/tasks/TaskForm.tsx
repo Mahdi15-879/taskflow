@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-type Props = {
-  onAdd: (title: string) => void;
-};
-
-export default function TaskForm({ onAdd }: Props) {
+export default function TaskForm() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +28,6 @@ export default function TaskForm({ onAdd }: Props) {
       if (error) throw error;
 
       setTitle("");
-      onAdd(title);
     } catch (err) {
       console.error(err);
       alert("Failed to add task");
@@ -57,7 +52,7 @@ export default function TaskForm({ onAdd }: Props) {
       <button
         onClick={addTask}
         disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-500 disabled:opacity-50"
+        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
       >
         {loading ? "Adding..." : "Add"}
       </button>
