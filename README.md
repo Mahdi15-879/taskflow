@@ -101,7 +101,7 @@ The interface updates immediately before the server confirms changes, providing 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/taskflow.git
+git clone https://github.com/Mahdi15-879/taskflow.git
 cd taskflow
 ```
 
@@ -117,7 +117,7 @@ Create a `.env.local` file in the project root:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 ```
 
 ### 4. Run the Development Server
